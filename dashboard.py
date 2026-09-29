@@ -6,7 +6,7 @@ st.set_page_config(page_title="Control Kiosco - Panel Dueño", page_icon="📊",
 
 # Credenciales de Supabase
 SUPABASE_URL = "https://xxiuwpqaycngdbnphaap.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4aXV3cHFheWNuZ2RibnBoYWFwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MDY0NTcwNCwiZXhwIjoyMTA2MjIxNzA0fQ.rkdxUKmK3D6rC5EcSk9V6McI0H4z9xZMKedSh6nWS6M"  # Tu clave de Supabase completa
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4aXV3cHFheWNuZ2RibnBoYWFwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MDY0NTcwNCwiZXhwIjoyMTA2MjIxNzA0fQ.rkdxUKmK3D6rC5EcSk9V6McI0H4z9xZMKedSh6nWS6M"
 
 @st.cache_resource
 def init_supabase():
@@ -36,13 +36,11 @@ tab1, tab2, tab3 = st.tabs(["💵 Resumen de Ventas", "📦 Estado de Stock", "�
 with tab1:
     st.header("Resumen General de Caja")
     
-    # Consulta según filtro de sucursal
-    query_ventas = supabase.table("ventas").select("*")
-    if kiosco_seleccionado != "Todos los Kioscos":
-        query_ventas = query_ventas.eq("kiosco_id", kiosco_seleccionado)
-        
-    res_ventas = query_ventas.execute()
-    ventas = res_ventas.data
+    res_ventas = supabase.table("ventas").select("*").execute()
+    ventas = res_ventas.data or []
+
+    if kiosco_seleccionado != "Todos los Kioscos" and ventas:
+        ventas = [v for v in ventas if v.get("kiosco_id") == kiosco_seleccionado]
 
     if ventas:
         total_recaudado = sum(v["total"] for v in ventas if v.get("total"))
@@ -61,12 +59,11 @@ with tab1:
 with tab2:
     st.header("Inventario de Productos")
     
-    query_prods = supabase.table("productos").select("*")
-    if kiosco_seleccionado != "Todos los Kioscos":
-        query_prods = query_prods.eq("kiosco_id", kiosco_seleccionado)
-        
-    res_prods = query_prods.execute()
-    prods = res_prods.data
+    res_prods = supabase.table("productos").select("*").execute()
+    prods = res_prods.data or []
+
+    if kiosco_seleccionado != "Todos los Kioscos" and prods:
+        prods = [p for p in prods if p.get("kiosco_id") == kiosco_seleccionado]
 
     if prods:
         st.dataframe(prods, use_container_width=True)
@@ -77,12 +74,11 @@ with tab2:
 with tab3:
     st.header("Gastos y Pagos a Proveedores")
     
-    query_egresos = supabase.table("egresos").select("*")
-    if kiosco_seleccionado != "Todos los Kioscos":
-        query_egresos = query_egresos.eq("kiosco_id", kiosco_seleccionado)
-        
-    res_egresos = query_egresos.execute()
-    egresos = res_egresos.data
+    res_egresos = supabase.table("egresos").select("*").execute()
+    egresos = res_egresos.data or []
+
+    if kiosco_seleccionado != "Todos los Kioscos" and egresos:
+        egresos = [e for e in egresos if e.get("kiosco_id") == kiosco_seleccionado]
 
     if egresos:
         total_gastos = sum(e["monto_total"] for e in egresos if e.get("monto_total"))
